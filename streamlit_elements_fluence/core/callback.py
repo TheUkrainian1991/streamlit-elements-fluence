@@ -3,46 +3,12 @@ import json
 import re
 
 from streamlit import session_state
-from streamlit.components.v1 import custom_component as components
 from typing import Callable
 
 from streamlit_elements_fluence.core.exceptions import ElementsFrontendError
 
 CALLBACK_KEY = f"{__name__}.elements_callback_manager"
 FORBIDDEN_PARAM_CHAR_RE = re.compile("\W+")
-
-
-def _patch_register_widget(register_widget):
-    def wrapper_register_widget(*args, **kwargs):
-        try:
-            user_key = None
-            new_callback_data = kwargs[
-                "ctx"
-            ].session_state._state._new_session_state.get(
-                "streamlit_elements.core.frame.elements_frame", None
-            )
-            if new_callback_data is not None:
-                user_key = new_callback_data._key
-        except:
-            user_key = None
-        callbacks = session_state.get(CALLBACK_KEY, None)
-
-        # Check if a callback was registered for that user_key.
-        if user_key is not None and callbacks is not None and user_key in callbacks:
-            callback_manager = callbacks[user_key]
-
-            # Add callback-specific args for the real register_widget function.
-            kwargs["on_change_handler"] = callback_manager.dispatch
-
-        # Call the original function with updated kwargs.
-        return register_widget(*args, **kwargs)
-
-    return wrapper_register_widget
-
-# Patch function once.
-if not hasattr(components.register_widget, CALLBACK_KEY):
-    components.register_widget = _patch_register_widget(components.register_widget)
-    setattr(components.register_widget, CALLBACK_KEY, True)
 
 
 class ElementsCallbackManager:
@@ -145,7 +111,10 @@ class ElementsCallbackData(dict):
     __slots__ = ()
 
     def __getattr__(self, value):
-        return self.__getitem__(value)
+        try: 
+            return self.__getitem__(value)
+        except:
+            raise AttributeError('{value} is not a valid attribute')
 
 
 def _get_parameters(function):

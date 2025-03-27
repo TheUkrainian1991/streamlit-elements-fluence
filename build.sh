@@ -36,6 +36,7 @@ echo "Starting build process..."
     echo "Cleaning up: removing node_modules and .next directories..."
     rm -rf node_modules
     rm -rf .next
+    rm -rf out
 
     # Return to the project root.
     echo "Returning to project root..."

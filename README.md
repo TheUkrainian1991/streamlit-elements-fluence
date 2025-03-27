@@ -20,6 +20,8 @@ This package builds on the elegant and incredibly useful "Streamlit Elements" (<
 
 * Display a legacy mix of HTML and `<script>` tags using `<InnerHTML>`, see <https://github.com/christo-pr/dangerously-set-html-content-v1>
 
+Patches added to work with later version of streamlit, attempted to update some of the elements.
+
 ## Example
 
 ```python=
