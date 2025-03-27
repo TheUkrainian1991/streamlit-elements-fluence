@@ -22,7 +22,7 @@ class Element:
         self._frame.register_element(self)
 
         # Extract the on_change callback, if provided.
-        on_change = props.pop("on_change", None)
+        on_change = props.pop("on_change", None) or props.pop("onClick", None)
         if on_change is not None:
             self._on_change = on_change
             # Optionally, you might register the callback with your frame,
