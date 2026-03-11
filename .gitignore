@@ -24,6 +24,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+build/
 develop-eggs/
 dist/
 downloads/
@@ -230,6 +231,10 @@ web_modules/
 
 # Next.js build output
 out
+streamlit_elements_fluence/frontend/build/
+
+# Local smoke-test temp files
+.tmp_streamlit_test/
 
 # Nuxt.js build / generate output
 .nuxt
