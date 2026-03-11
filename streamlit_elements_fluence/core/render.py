@@ -7,4 +7,7 @@ if version.__release__:
 else:
     ELEMENTS_FRONTEND = {"url": "http://localhost:3001"}
 
-render_component = declare_component("streamlit_elements", **ELEMENTS_FRONTEND)
+_component = declare_component("streamlit_elements", **ELEMENTS_FRONTEND)
+
+def render_component(js, key, default="{}", on_change=None, license="no license"):
+    return _component(js=js, key=key, default=default, on_change=on_change, license=license)

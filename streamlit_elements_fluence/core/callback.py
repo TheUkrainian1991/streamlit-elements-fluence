@@ -10,6 +10,9 @@ from streamlit_elements_fluence.core.exceptions import ElementsFrontendError
 CALLBACK_KEY = f"{__name__}.elements_callback_manager"
 FORBIDDEN_PARAM_CHAR_RE = re.compile("\W+")
 
+# NOTE: This code has been updated to work with Streamlit 1.36+ 
+# which officially supports on_change callbacks for custom components.
+# No patching required anymore!
 
 class ElementsCallbackManager:
     __slots__ = ("_callbacks", "_key")
@@ -40,14 +43,28 @@ class ElementsCallbackManager:
         return callback
 
     def dispatch(self):
-        # Retrieve data and convert it to json.
-        frontend_data = json.loads(session_state[self._key], object_hook=lambda d: ElementsCallbackData(d))
+        # This is the callback function that gets called by Streamlit's
+        # official on_change mechanism (Streamlit 1.36+)
+        
+        # Get the widget data from session state
+        widget_data = session_state.get(self._key, "{}")
+        
+        try:
+            # Parse the JSON data from the frontend
+            frontend_data = json.loads(widget_data, object_hook=lambda d: ElementsCallbackData(d))
+        except (json.JSONDecodeError, TypeError):
+            # If we can't parse it, assume it's not callback data
+            return
 
-        if "error" in frontend_data:
+        if isinstance(frontend_data, dict) and "error" in frontend_data:
             raise ElementsFrontendError(f"In elements frame '{self._key}': {frontend_data.error}")
 
+        # Handle the case where frontend_data is not a dict (single value)
+        if not isinstance(frontend_data, dict):
+            return
+
         # Sort data by key to make sure callbacks are called in order.
-        frontend_data = {k: v for k, v in sorted(frontend_data.items())}
+        frontend_data = {k: v for k, v in sorted(frontend_data.items()) if isinstance(v, dict)}
 
         for callback_id, frontend_params in frontend_data.items():
             if callback_id in self._callbacks:

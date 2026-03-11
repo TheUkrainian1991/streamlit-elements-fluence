@@ -36,7 +36,13 @@ def new_frame(key):
         javascript = repr(frame)
 
         if javascript:
-            render_component(js=javascript, key=key, default="{}", license=session_state.get("mui_license", "no license"))
+            render_component(
+                js=javascript,
+                key=key,
+                default="{}",
+                on_change=frame._callback_manager.dispatch,
+                license=session_state.get("mui_license", "no license")
+            )
 
     finally:
         del session_state[ELEMENTS_FRAME_KEY]
@@ -82,12 +88,12 @@ class ElementsFrame:
             self._serialized.add(obj)
             return repr(obj)
 
+        elif isinstance(obj, JSCallback):
+            return repr(obj)
+
         elif isinstance(obj, (Callable, ElementsCallback)):
             callback = self._callback_manager.register(obj)
             return repr(callback)
-
-        elif isinstance(obj, JSCallback):
-            return repr(obj)
 
         elif isinstance(obj, Mapping):
             items = (json.dumps(key) + ":" + self.serialize(value) for key, value in obj.items())
