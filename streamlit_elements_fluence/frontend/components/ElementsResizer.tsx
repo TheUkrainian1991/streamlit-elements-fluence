@@ -1,45 +1,60 @@
-import ResizeObserver from "resize-observer-polyfill"
 import { Streamlit } from "streamlit-component-lib"
 
-let debounceTimer: ReturnType<typeof setTimeout> | null = null
+// Use the same height source that streamlit-component-lib uses internally
+// when setFrameHeight() is called with no arguments: document.body.scrollHeight.
+// This ensures the iframe height matches what Streamlit expects, preventing
+// click target misalignment.
 
-const resizeObserver = new ResizeObserver((entries: any) => {
-  // Use scrollHeight of the observed element for the most accurate measurement,
-  // as contentRect.height can miss overflowing children (e.g. MUI popups/tooltips).
-  const element = entries[0].target as HTMLElement
-  const height = Math.max(
-    entries[0].contentRect.height,
-    element.scrollHeight
-  )
+let rafId: number | null = null
 
-  // Debounce to ensure dynamically-loaded MUI components have finished rendering
-  // before we commit the final frame height. This prevents the iframe from being
-  // sized before content is fully laid out, which causes click offset issues.
-  if (debounceTimer !== null) {
-    clearTimeout(debounceTimer)
+const updateHeight = () => {
+  // Cancel any pending frame to avoid redundant updates
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
   }
 
-  // Set height immediately for responsiveness
-  Streamlit.setFrameHeight(height)
+  // Use requestAnimationFrame to batch measurements after layout/paint,
+  // ensuring dynamically-loaded MUI components are fully rendered.
+  rafId = requestAnimationFrame(() => {
+    Streamlit.setFrameHeight()
+    rafId = null
+  })
+}
 
-  // Then re-check shortly after in case dynamic components changed the layout
-  debounceTimer = setTimeout(() => {
-    const finalHeight = Math.max(
-      element.getBoundingClientRect().height,
-      element.scrollHeight
-    )
-    Streamlit.setFrameHeight(finalHeight)
-  }, 100)
+// ResizeObserver catches size changes from layout shifts, content loading, etc.
+const resizeObserver = new ResizeObserver(() => {
+  updateHeight()
 })
 
+// MutationObserver catches DOM changes that don't immediately trigger a resize,
+// such as dynamically-loaded MUI components being inserted into the tree.
+let mutationObserver: MutationObserver | null = null
+
 const observeElement = (element: HTMLDivElement | null) => {
-  if (element !== null)
+  if (element !== null) {
     resizeObserver.observe(element)
-  else {
+
+    mutationObserver = new MutationObserver(() => {
+      updateHeight()
+    })
+    mutationObserver.observe(element, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["style", "class"]
+    })
+
+    // Initial height report
+    updateHeight()
+  } else {
     resizeObserver.disconnect()
-    if (debounceTimer !== null) {
-      clearTimeout(debounceTimer)
-      debounceTimer = null
+    if (mutationObserver !== null) {
+      mutationObserver.disconnect()
+      mutationObserver = null
+    }
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId)
+      rafId = null
     }
   }
 }
