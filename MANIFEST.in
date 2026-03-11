@@ -1,3 +1,7 @@
 recursive-include streamlit_*/frontend *
 prune streamlit_*/frontend/node_modules
 prune streamlit_*/frontend/.next
+prune streamlit_*/frontend/build/cache
+exclude streamlit_*/frontend/build/trace
+global-exclude .DS_Store
+global-exclude *.tsbuildinfo
