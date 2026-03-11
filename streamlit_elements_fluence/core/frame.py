@@ -3,10 +3,11 @@ from contextlib import contextmanager
 from streamlit import session_state
 from typing import Callable, Iterable, Mapping
 
-from streamlit_elements.core.exceptions import ElementsFrameError
-from streamlit_elements.core.callback import ElementsCallbackManager, ElementsCallback
-from streamlit_elements.core.element import Element
-from streamlit_elements.core.render import render_component
+from streamlit_elements_fluence.core.exceptions import ElementsFrameError
+from streamlit_elements_fluence.core.callback import ElementsCallbackManager, ElementsCallback
+from streamlit_elements_fluence.core.element import Element
+from streamlit_elements_fluence.core.render import render_component
+from streamlit_elements_fluence.core.jscallback import JSCallback
 
 ELEMENTS_FRAME_KEY = f"{__name__}.elements_frame"
 
@@ -35,13 +36,12 @@ def new_frame(key):
         javascript = repr(frame)
 
         if javascript:
-            # Use the new render_component with official on_change support
-            # The callback manager's dispatch method will be called when the component value changes
             render_component(
-                js=javascript, 
-                key=key, 
+                js=javascript,
+                key=key,
                 default="{}",
-                on_change=frame._callback_manager.dispatch if frame._callback_manager else None
+                on_change=frame._callback_manager.dispatch,
+                license=session_state.get("mui_license", "no license")
             )
 
     finally:
@@ -82,6 +82,9 @@ class ElementsFrame:
     def serialize(self, obj):
         if isinstance(obj, Element):
             self._serialized.add(obj)
+            return repr(obj)
+
+        elif isinstance(obj, JSCallback):
             return repr(obj)
 
         elif isinstance(obj, (Callable, ElementsCallback)):
