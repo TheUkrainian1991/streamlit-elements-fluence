@@ -141,6 +141,7 @@ const dataGrid: ElementsRecord = {
   GridToolbarDensitySelector: dynamic(() => import("@mui/x-data-grid").then(m => m.GridToolbarDensitySelector), { loading: ElementsLoading, ssr: false }),
   GridToolbarExport: dynamic(() => import("@mui/x-data-grid").then(m => m.GridToolbarExport), { loading: ElementsLoading, ssr: false }),
   GridToolbarFilterButton: dynamic(() => import("@mui/x-data-grid").then(m => m.GridToolbarFilterButton), { loading: ElementsLoading, ssr: false }),
+  GridToolbarQuickFilter: dynamic(() => import("@mui/x-data-grid").then(m => m.GridToolbarQuickFilter), { loading: ElementsLoading, ssr: false }),
 }
 
 const dataGridPro: ElementsRecord = {
