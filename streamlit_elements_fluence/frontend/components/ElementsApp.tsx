@@ -20,7 +20,7 @@ import loadNivo from "./modules/charts/Nivo"
 import loadPlayer from "./modules/media/Player"
 import loadInnerHTML from "./modules/extras/InnerHTML"
 
-import { LicenseInfo } from '@mui/x-license';
+import { LicenseInfo } from '@mui/x-license-pro';
 
 
 const loaders: ElementsLoaderRecord = {
@@ -81,6 +81,24 @@ const send = (data: Record<string, any>) => {
   Streamlit.setComponentValue(JSON.stringify(data, getReplacer()))
 }
 
+const serializeError = (error: unknown, source: string) => {
+  if (error instanceof Error) {
+    return {
+      source,
+      name: error.name,
+      message: error.message,
+      stack: error.stack ?? null,
+    }
+  }
+
+  return {
+    source,
+    name: "Error",
+    message: typeof error === "string" ? error : JSON.stringify(error),
+    stack: null,
+  }
+}
+
 const render = (module: string, element: string, props: any, children: React.ReactNode[]) => {
   if (!loaders.hasOwnProperty(module)) {
     throw new Error(`Module ${module} does not exist`)
@@ -103,7 +121,9 @@ const ElementsApp = ({ args, theme }: ElementsAppProps) => {
   const [js, setJs] = useState("return []")
 
   useEffect(() => {
-    setJs(`"use strict";try{return(${args.js});}catch(error){send({error:error.message});return([]);}`)
+    setJs(
+      `"use strict";try{return(${args.js});}catch(error){send({error:{source:"js_eval",name:error&&error.name?error.name:"Error",message:error&&error.message?error.message:String(error),stack:error&&error.stack?error.stack:null}});return([]);}`
+    )
 
     // If user presses "r" while focusing Elements IFrame,
     // rerun Streamlit app by sending an empty value.
@@ -117,7 +137,7 @@ const ElementsApp = ({ args, theme }: ElementsAppProps) => {
   return (
     <ElementsResizer>
       <ElementsTheme theme={theme}>
-        <ErrorBoundary fallback={<div />} onError={error => send({ error: error.message })}>
+        <ErrorBoundary fallback={<div />} onError={error => send({ error: serializeError(error, "react_error_boundary") })}>
           {jsx("div", null, ...new Function("render", "send", "window", js)(render, send, window))}
         </ErrorBoundary>
       </ElementsTheme>

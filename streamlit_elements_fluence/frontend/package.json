@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "npm run build-public && next dev -H 127.0.0.1 -p 3001",
-    "build": "npm run build-public && next build",
+    "build": "npm run build-public && rm -rf build && next build && next export -o build",
     "start": "next start",
     "lint": "next lint",
     "build-public": "npm run copy-monaco && npm run del-source-maps",
