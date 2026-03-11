@@ -1,3 +1,15 @@
+# To edit and build yourself
+Do you typescript edits
+brew install node
+cd directory_where/you_want_build_folder
+npm install
+npm run build
+
+You will need to update typescript
+Note if not on macos you will need to update the del-source-maps command in packages.json 
+
+
+
 # Streamlit Elements with Fluence Enhancements
 
 This package builds on the elegant and incredibly useful "Streamlit Elements" (<https://github.com/okld/streamlit-elements>). The "enhancements" are not so elegant but have proved to be useful in our application. The enhancements are:
@@ -7,6 +19,8 @@ This package builds on the elegant and incredibly useful "Streamlit Elements" (<
 * Call JavaScript callbacks. This can be useful for example when defining a "valueFormatter" for a DataGrid.
 
 * Display a legacy mix of HTML and `<script>` tags using `<InnerHTML>`, see <https://github.com/christo-pr/dangerously-set-html-content-v1>
+
+Patches added to work with later version of streamlit, attempted to update some of the elements.
 
 ## Example
 
