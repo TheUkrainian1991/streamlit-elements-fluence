@@ -6,34 +6,14 @@ from streamlit import session_state
 from streamlit.components.v1 import components
 from typing import Callable
 
-from streamlit_elements_fluence.core.exceptions import ElementsFrontendError
+from streamlit_elements.core.exceptions import ElementsFrontendError
 
 CALLBACK_KEY = f"{__name__}.elements_callback_manager"
 FORBIDDEN_PARAM_CHAR_RE = re.compile("\W+")
 
-
-def _patch_register_widget(register_widget):
-    def wrapper_register_widget(*args, **kwargs):
-        user_key = kwargs.get("user_key", None)
-        callbacks = session_state.get(CALLBACK_KEY, None)
-
-        # Check if a callback was registered for that user_key.
-        if user_key is not None and callbacks is not None and user_key in callbacks:
-            callback_manager = callbacks[user_key]
-
-            # Add callback-specific args for the real register_widget function.
-            kwargs["on_change_handler"] = callback_manager.dispatch
-
-        # Call the original function with updated kwargs.
-        return register_widget(*args, **kwargs)
-
-    return wrapper_register_widget
-
-# Patch function once.
-if not hasattr(components.register_widget, CALLBACK_KEY):
-    components.register_widget = _patch_register_widget(components.register_widget)
-    setattr(components.register_widget, CALLBACK_KEY, True)
-
+# NOTE: This code has been updated to work with Streamlit 1.36+ 
+# which officially supports on_change callbacks for custom components.
+# No patching required anymore!
 
 class ElementsCallbackManager:
     __slots__ = ("_callbacks", "_key")
@@ -64,14 +44,28 @@ class ElementsCallbackManager:
         return callback
 
     def dispatch(self):
-        # Retrieve data and convert it to json.
-        frontend_data = json.loads(session_state[self._key], object_hook=lambda d: ElementsCallbackData(d))
+        # This is the callback function that gets called by Streamlit's
+        # official on_change mechanism (Streamlit 1.36+)
+        
+        # Get the widget data from session state
+        widget_data = session_state.get(self._key, "{}")
+        
+        try:
+            # Parse the JSON data from the frontend
+            frontend_data = json.loads(widget_data, object_hook=lambda d: ElementsCallbackData(d))
+        except (json.JSONDecodeError, TypeError):
+            # If we can't parse it, assume it's not callback data
+            return
 
-        if "error" in frontend_data:
+        if isinstance(frontend_data, dict) and "error" in frontend_data:
             raise ElementsFrontendError(f"In elements frame '{self._key}': {frontend_data.error}")
 
+        # Handle the case where frontend_data is not a dict (single value)
+        if not isinstance(frontend_data, dict):
+            return
+
         # Sort data by key to make sure callbacks are called in order.
-        frontend_data = {k: v for k, v in sorted(frontend_data.items())}
+        frontend_data = {k: v for k, v in sorted(frontend_data.items()) if isinstance(v, dict)}
 
         for callback_id, frontend_params in frontend_data.items():
             if callback_id in self._callbacks:
