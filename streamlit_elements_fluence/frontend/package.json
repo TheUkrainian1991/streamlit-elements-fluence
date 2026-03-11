@@ -21,6 +21,7 @@
     "@mui/x-data-grid-pro": "^6.20.4",
     "@mui/x-license-pro": "^6.10.2",
     "@nivo/bar": "^0.99.0",
+    "@nivo/boxplot": "^0.99.0",
     "@nivo/bullet": "^0.99.0",
     "@nivo/bump": "^0.99.0",
     "@nivo/calendar": "^0.99.0",
@@ -30,6 +31,7 @@
     "@nivo/funnel": "^0.99.0",
     "@nivo/geo": "^0.99.0",
     "@nivo/heatmap": "^0.99.0",
+    "@nivo/icicle": "^0.99.0",
     "@nivo/line": "^0.99.0",
     "@nivo/marimekko": "^0.99.0",
     "@nivo/network": "^0.99.0",
@@ -46,6 +48,7 @@
     "@nivo/voronoi": "^0.99.0",
     "@nivo/waffle": "^0.99.0",
     "@tinymce/tinymce-react": "^3.13.1",
+    "dangerously-set-html-content": "1.0.9",
     "dequal": "^2.0.2",
     "monaco-editor": "^0.33.0",
     "mousetrap": "^1.6.5",
@@ -57,7 +60,6 @@
     "react-player": "^2.10.0",
     "react-swipeable-views": "^0.14.0",
     "resize-observer-polyfill": "^1.5.1",
-    "dangerously-set-html-content": "1.0.9",
     "streamlit-component-lib": "^2.0.0"
   },
   "devDependencies": {
