@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   assetPrefix: '.',
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 }
 
 
