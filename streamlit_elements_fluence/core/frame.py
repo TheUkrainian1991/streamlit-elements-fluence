@@ -3,8 +3,12 @@ from contextlib import contextmanager
 from streamlit import session_state
 from typing import Callable, Iterable, Mapping
 
-from streamlit_elements_fluence.core.exceptions import ElementsFrameError
-from streamlit_elements_fluence.core.callback import ElementsCallbackManager, ElementsCallback
+from streamlit_elements_fluence.core.exceptions import ElementsFrameError, ElementsFrontendError
+from streamlit_elements_fluence.core.callback import (
+    ElementsCallbackManager,
+    ElementsCallback,
+    format_frontend_error,
+)
 from streamlit_elements_fluence.core.element import Element
 from streamlit_elements_fluence.core.render import render_component
 from streamlit_elements_fluence.core.jscallback import JSCallback
@@ -34,6 +38,7 @@ def new_frame(key):
     try:
         yield
         javascript = repr(frame)
+        frontend_error = frame._callback_manager.consume_frontend_error()
 
         if javascript:
             render_component(
@@ -43,6 +48,9 @@ def new_frame(key):
                 on_change=frame._callback_manager.dispatch,
                 license=session_state.get("mui_license", "no license")
             )
+
+        if frontend_error:
+            raise ElementsFrontendError(format_frontend_error(key, frontend_error))
 
     finally:
         del session_state[ELEMENTS_FRAME_KEY]

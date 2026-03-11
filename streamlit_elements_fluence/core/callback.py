@@ -5,21 +5,21 @@ import re
 from streamlit import session_state
 from typing import Callable
 
-from streamlit_elements_fluence.core.exceptions import ElementsFrontendError
-
 CALLBACK_KEY = f"{__name__}.elements_callback_manager"
-FORBIDDEN_PARAM_CHAR_RE = re.compile("\W+")
+FRONTEND_ERROR_KEY = f"{__name__}.elements_frontend_error"
+FORBIDDEN_PARAM_CHAR_RE = re.compile(r"\W+")
 
 # NOTE: This code has been updated to work with Streamlit 1.36+ 
 # which officially supports on_change callbacks for custom components.
 # No patching required anymore!
 
 class ElementsCallbackManager:
-    __slots__ = ("_callbacks", "_key")
+    __slots__ = ("_callbacks", "_key", "_frontend_error_key")
 
     def __init__(self, key):
         self._callbacks = {}
         self._key = key
+        self._frontend_error_key = f"{FRONTEND_ERROR_KEY}.{key}"
 
         # Initialize callbacks store.
         if CALLBACK_KEY not in session_state:
@@ -27,6 +27,9 @@ class ElementsCallbackManager:
 
         # Register a callback for a given element_key.
         session_state[CALLBACK_KEY][key] = self
+
+    def consume_frontend_error(self):
+        return session_state.pop(self._frontend_error_key, None)
 
     def register(self, callback):
         if isinstance(callback, Callable):
@@ -57,7 +60,8 @@ class ElementsCallbackManager:
             return
 
         if isinstance(frontend_data, dict) and "error" in frontend_data:
-            raise ElementsFrontendError(f"In elements frame '{self._key}': {frontend_data.error}")
+            session_state[self._frontend_error_key] = _normalize_frontend_error(frontend_data["error"])
+            return
 
         # Handle the case where frontend_data is not a dict (single value)
         if not isinstance(frontend_data, dict):
@@ -130,8 +134,41 @@ class ElementsCallbackData(dict):
     def __getattr__(self, value):
         try: 
             return self.__getitem__(value)
-        except:
-            raise AttributeError('{value} is not a valid attribute')
+        except KeyError as error:
+            raise AttributeError(f"{value} is not a valid attribute") from error
+
+
+def _normalize_frontend_error(error):
+    if isinstance(error, dict):
+        return {
+            "source": str(error.get("source", "frontend")),
+            "name": str(error.get("name", "Error")),
+            "message": str(error.get("message", "Unknown frontend error")),
+            "stack": None if error.get("stack") is None else str(error["stack"]),
+        }
+
+    return {
+        "source": "frontend",
+        "name": "Error",
+        "message": str(error),
+        "stack": None,
+    }
+
+
+def format_frontend_error(frame_key, error_data):
+    if not isinstance(error_data, dict):
+        return f"In elements frame '{frame_key}': {error_data}"
+
+    source = error_data.get("source", "frontend")
+    name = error_data.get("name", "Error")
+    message = error_data.get("message", "Unknown frontend error")
+    stack = error_data.get("stack")
+
+    formatted = f"In elements frame '{frame_key}' ({source}) {name}: {message}"
+    if stack:
+        formatted = f"{formatted}\nFrontend stack:\n{stack}"
+
+    return formatted
 
 
 def _get_parameters(function):
