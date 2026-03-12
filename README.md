@@ -1,4 +1,36 @@
-# To edit and build yourself
+## To apply your own python patches
+1. Download the original tar.gz file from https://pypi.org/project/streamlit-elements-fluence/
+2. Extract the tar.gz
+3. Make your changes
+4. Don't forget to update the version in streamlit_elements_fluence/version.py and setup.py:
+    ```
+    from setuptools import setup
+
+    setup(
+        name='streamlit-elements-fluence',
+        version='0.1.5'
+    )
+    ```
+5. `cd streamlit-elements-fluence-0.1.5`
+
+6. Recompress the Contents: While inside the directory containing setup.py or pyproject.toml, run:
+    `tar -czvf ../streamlit-elements-fluence-0.1.5.tar.gz .`
+
+    This command will create a new .tar.gz file with the contents at the top level.
+
+7. Verify the New Archive: You can check the new archive structure to ensure that setup.py or pyproject.toml is at the top level:
+    `tar -tzf ../streamlit-elements-fluence-0.1.5.tar.gz`
+
+8. Upload the Corrected Archive: If you're using GitHub or another hosting service, replace the old .tar.gz file with the newly compressed one.
+
+
+## To apply typescript changes and build yourself
+### **WARNING** 
+- This often breaks button presses (misalignment issues)
+- Cannot find a workaround 
+- Concluded it is something to do with the build process - NOT the file changes
+
+### Instructions 
 Do you typescript edits
 brew install node
 cd directory_where/you_want_build_folder
