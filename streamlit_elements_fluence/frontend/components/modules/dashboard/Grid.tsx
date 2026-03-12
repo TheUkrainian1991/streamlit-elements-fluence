@@ -6,6 +6,12 @@ import "react-resizable/css/styles.css"
 
 const ResponsiveGridLayout = WidthProvider(Responsive)
 const GridPlaceholderStyle = <Global styles={{
+  ".react-grid-layout": {
+    transition: "none !important",
+  },
+  ".react-grid-item": {
+    transition: "none !important",
+  },
   ".react-grid-item.react-grid-placeholder": {
     background: "transparent !important",
     border: "thin dashed grey !important",
